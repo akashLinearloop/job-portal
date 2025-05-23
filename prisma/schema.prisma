@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @map("_id") @db.ObjectId
+  name          String?
+  email         String        @unique
+  password      String
+  role          String        // JOB_SEEKER or JOB_PROVIDER
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  jobSeeker     JobSeeker?
+  jobProvider   JobProvider?
+  jobs          Job[]
+  applications  Application[]
+}
+
+model JobSeeker {
+  id          String    @id @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
+  user        User      @relation(fields: [userId], references: [id])
+  title       String?
+  bio         String?
+  location    String?
+  skills      String[]  @default([])
+  experience  String?
+  education   String?
+  resume      String?
+  linkedin    String?
+  github      String?
+  website     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId])
+}
+
+model JobProvider {
+  id                 String    @id @map("_id") @db.ObjectId
+  userId             String    @db.ObjectId
+  user               User      @relation(fields: [userId], references: [id])
+  companyName        String?
+  companyDescription String?
+  industry           String?
+  location           String?
+  website            String?
+  linkedin           String?
+  foundedYear        String?
+  companySize        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([userId])
+}
+
+model Job {
+  id               String        @id @map("_id") @db.ObjectId
+  title            String
+  company          String
+  location         String
+  type             String        // FULL_TIME, PART_TIME, CONTRACT, INTERNSHIP
+  salary           String
+  description      String
+  requirements     String[]
+  responsibilities String[]
+  experience       String
+  education        String
+  industry         String
+  skills           String[]
+  featured         Boolean       @default(false)
+  status           String        @default("ACTIVE") // ACTIVE, CLOSED, DRAFT
+  userId           String        @db.ObjectId
+  user             User          @relation(fields: [userId], references: [id])
+  applications     Application[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Application {
+  id           String   @id @map("_id") @db.ObjectId
+  jobId        String   @db.ObjectId
+  job          Job      @relation(fields: [jobId], references: [id])
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id])
+  coverLetter  String
+  status       String   @default("PENDING") // PENDING, REVIEWING, INTERVIEW, ACCEPTED, REJECTED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([jobId, userId])
+}
